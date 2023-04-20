@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'intro1.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -9,110 +10,62 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Autenticación por huella',
-      home: LoginPage(),
+      home: AuthenticationPage(),
     );
   }
 }
 
-class LoginPage extends StatelessWidget {
-  final LocalAuthentication _auth = LocalAuthentication();
+class AuthenticationPage extends StatefulWidget {
+  @override
+  _AuthenticationPageState createState() => _AuthenticationPageState();
+}
 
-  Future<bool> _authenticate() async {
-    bool isAuthenticated = false;
+class _AuthenticationPageState extends State<AuthenticationPage> {
+  final LocalAuthentication _localAuthentication = LocalAuthentication();
 
+  String _authorized = 'Not authorized';
+
+  Future<void> _authenticate() async {
+    bool authenticated = false;
     try {
-      isAuthenticated = await _auth.authenticate(
-        localizedReason: 'Por favor, autentique para iniciar sesión',
+      authenticated = await _localAuthentication.authenticate(
+        localizedReason: 'Escanea tu huella para acceder',
+        biometricOnly: true,
         useErrorDialogs: true,
         stickyAuth: true,
       );
     } catch (e) {
       print(e);
     }
-
-    return isAuthenticated;
+    setState(() {
+      _authorized = authenticated ? 'Autorizado' : 'No autorizado';
+    });
+    if (authenticated) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => IntroScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(''),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Iniciar sesión',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage('https://i.pinimg.com/originals/42/9d/63/429d631659a11a9eb666b103d811470a.jpg'),
-                  ),
-                ],
-              ),
+      appBar: AppBar(
+        title: Text('Autenticacion Biometrica'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('Tu estas $_authorized para usar la app.'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Autenticar'),
+              onPressed: _authenticate,
             ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Correo electrónico',
-                      hintText: 'Ingresa tu correo electrónico',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  TextField(
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Contraseña',
-                      hintText: 'Ingresa tu contraseña',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                   onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => IntroScreen()),
-            );
-          },
-                    child: Text('Ingresar'),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
